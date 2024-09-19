@@ -1,0 +1,128 @@
+import numpy as np
+from scipy.linalg import solve_triangular
+import pandas as pd
+from inline_sql import sql, sql_val
+
+def calcularLU(A):
+    m = A.shape[0]
+    n = A.shape[1]
+    Ac = A.copy()
+    P = np.eye(n)
+    
+    if m != n:
+        print('Matriz no cuadrada')
+        return
+
+    L = np.eye(n) 
+        
+    for i in range(0, n):   
+        max_row = np.argmax(np.abs(Ac[i:n, i])) + i
+        if i != max_row:
+            # Intercambia las filas en Ac
+            Ac[[i, max_row], :] = Ac[[max_row, i], :]
+            
+            # Intercambia las filas en P
+            P[[i, max_row], :] = P[[max_row, i], :]
+            
+            # Intercambia las filas en L hasta la columna i (excluyendo la diagonal)
+            if i > 0:
+                L[[i, max_row], :i] = L[[max_row, i], :i]
+            
+        for j in range(i+1, n):
+            piv = Ac[j][i] / Ac[i][i]
+            Ac[j] = Ac[j] - piv * Ac[i]
+            L[j][i] = piv
+
+    U = Ac
+    return L, U, P
+    
+
+
+def inversaLU(L, U, P):
+    n = L.shape[0]
+    Inv = np.zeros((n, 0)) 
+
+    if P is None:
+        P = np.eye(n)  # Si no se proporciona P, se usa la identidad
+
+    # Resolver el sistema para cada columna de la identidad permutada
+    for i in range(n):
+        b = P[:, i]  # Columna i de la matriz de permutación
+        x = solve_triangular(L, b, lower=True)
+        y = solve_triangular(U, x, lower=False)
+        Inv = np.column_stack((Inv, y))  # Agregar la columna de la inversa
+
+    return Inv
+
+   
+## Sea mi matriz compuesta por la demanda interna de cada sector
+sectores = np.array([[350,0,0],[50, 250, 150], [200,150,550]])
+print(sectores)
+## produccion total
+produ = np.array([1000, 500, 1000])
+Prod = np.diag(produ)
+print(Prod)
+L, U, P = calcularLU(Prod)
+pInv = (inversaLU(L,U,P))
+Asec = sectores@pInv
+print(Asec)
+
+n = sectores.shape[0]
+matriz_A = np.zeros((n,n))
+for i in range(n):
+    for j in range(n):
+        matriz_A[i][j] = sectores[i][j]/p[i]
+#print(matriz_A)    
+
+
+
+
+
+##Calculo mi matriz de Leontief: " inversa de (I - A) "
+I = np.eye(n)
+Le = I - matriz_A
+
+L, U, P = calcularLU(Le)
+matriz_Leontief = (inversaLU(L,U,P))
+#print(matriz_Leontief)
+    
+ 
+    
+ 
+    
+ 
+    
+ 
+    
+df = pd.read_csv('/home/Estudiante/Downloads/paisesc-0.csv')  
+    
+Peru_df = df[df['Country_iso3'] == 'PER']    
+Nic_df = df[df['Country_iso3'] == 'NIC']
+
+Peru_df.to_csv('file_name.csv', index=False)
+
+
+prodPER =Peru_df["Output"].values
+
+peru_matriz1 = Peru_df.drop(["Country_iso3", "Nosector", "Sector", "Output"], axis =1).values
+
+
+Apn = (Peru_df.filter(like='NIC')).drop(["CONS_NIC", "GFCF_NIC"], axis=1)
+App = (Peru_df.filter(like='PER')).drop(["CONS_PER", "GFCF_PER"], axis=1)
+Ann = (Nic_df.filter(like='NIC')).drop(["CONS_NIC", "GFCF_NIC"], axis=1)
+Anp = (Nic_df.filter(like='PER')).drop(["CONS_PER", "GFCF_PER"], axis=1)
+
+
+
+InPr = np.array()
+#print(App.shape)
+#### Mi matriz A == peru_matriz1 
+### tengo que armar (I-A) inversa 
+##print(peru_matriz1.shape)
+##I= np.eye(peru_matriz1.shape[0])
+
+
+
+
+
+
